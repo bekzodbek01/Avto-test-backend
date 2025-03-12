@@ -1,23 +1,29 @@
-from .views import CategoryListAPIView, CategoryDetailAPIView, MarathonListAPIView, MarathonDetailAPIView
 from django.urls import path
 from .views import (
-    MarathonResultAPIView,
-    MarathonAnswerAPIView,
+    CategoryListAPIView,
+    CategoryDetailAPIView,
     OptionAnswerCreateAPIView,
     CategoryResultAPIView,
+    CategoryAnswerAPIView,
+    MarathonAnswerAPIView,
+    MarathonResultAPIView,
+    MarathonListAPIView,
+    MarathonDetailAPIView
 )
 
 urlpatterns = [
-    path('marathon/<int:marathon_id>/answer/', MarathonAnswerAPIView.as_view(), name='marathon-answer'),
-    path('marathon/<int:marathon_id>/result/', MarathonResultAPIView.as_view(), name='marathon-result'),
-
-    path('marathons/', MarathonListAPIView.as_view(), name='marathon-list'),
-    path('marathon/<int:id>/', MarathonDetailAPIView.as_view(), name='marathon-detail'),
-
-    path('option-answer/', OptionAnswerCreateAPIView.as_view(), name='option-answer-create'),
-    path('category/<int:category_id>/results/', CategoryResultAPIView.as_view(), name='category-result'),
-
+    # Kategoriya API yo‘llari
     path('categories/', CategoryListAPIView.as_view(), name='category-list'),
-    path('category/<int:id>/', CategoryDetailAPIView.as_view(), name='category-detail'),
-]
+    path('categories/<int:id>/', CategoryDetailAPIView.as_view(), name='category-detail'),
+    path('categories/<int:category_id>/result/', CategoryResultAPIView.as_view(), name='category-result'),
+    path('categories/answer/', CategoryAnswerAPIView.as_view(), name='category-answer'),
 
+    # Marafon API yo‘llari
+    path('marathons/', MarathonListAPIView.as_view(), name='marathon-list'),
+    path('marathons/<int:id>/', MarathonDetailAPIView.as_view(), name='marathon-detail'),
+    path('marathons/<int:marathon_id>/result/', MarathonResultAPIView.as_view(), name='marathon-result'),
+    path('marathons/answer/', MarathonAnswerAPIView.as_view(), name='marathon-answer'),
+
+    # Variant tanlash API yo‘li
+    path('option-answer/', OptionAnswerCreateAPIView.as_view(), name='option-answer'),
+]

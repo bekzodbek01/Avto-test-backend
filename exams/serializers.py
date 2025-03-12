@@ -5,13 +5,13 @@ from .models import Marathon, Option, OptionAnswer, Category
 class OptionAnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = OptionAnswer
-        fields = ['user', 'option', 'text', 'is_correct', 'answered_at']
+        fields = ['user', 'option', 'text', 'is_correct']
 
 
 class OptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Option
-        fields = ['id', 'text', 'is_correct']
+        fields = ['id', 'text']
 
 
 class MarathonSerializer(serializers.ModelSerializer):
@@ -27,4 +27,4 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ['id', 'title', 'time_limit', 'start_time', 'marathons']
+        fields = ['id', 'title', 'marathons']
