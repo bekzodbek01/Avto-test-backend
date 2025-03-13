@@ -26,12 +26,13 @@ SECRET_KEY = 'django-insecure-n1ip$1ezinlr5er4irj9wmx=u@3n4b*v5t-has8525(+w^!*81
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -146,17 +147,92 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
-
 STATIC_URL = '/static/'
 
-# Agar statik fayllar loyihaning alohida papkasida bo‘lsa
+# Agar logo faylingiz `static/` papkasida bo'lsa
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
+    BASE_DIR / "static",]
 
-# Statik fayllarni yig‘ish uchun katalog
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Media fayllar uchun katalog
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+JAZZMIN_SETTINGS = {
+    # "site_title": "Foydali Havolalar",
+    "site_brand": "Avto test",
+    "site_title": "Avto Test Admin",
+    "site_header": "Avto Test Boshqaruvi",
+    "site_logo": "avto.jpg",
+    "welcome_sign": "Avto Test tizimiga xush kelibsiz!",
+    "copyright": "Avto Test",
+    # "search_model": ["app.model_name"],
+
+    "topmenu_links": [
+        {"model": "auth.User"},
+        # {"model": "auth.Group"},
+
+        # {"name": "Foydali Havolalar", "url": "foydali_havolalar"},
+        # {"name": "Hikmatli Sozlar", "url": "hikmatli_sozlar"},
+        # {"name": "Hujjatlar", "url": "hujjatlar"},
+        # {"name": "Ishtirokchilar", "url": "ishtirokchilar"},
+        # {"name": "Jadidlar", "url": "jadidlar"},
+        # {"name": "Manbalar", "url": "manbalar"},
+        # {"name": "Sahifalar", "url": "sahifalar"},
+        # {"name": "Slayder", "url": "slayder"},
+        # {"name": "Tadbirlar", "url": "tadbirlar"},
+        # {"name": "Tanlovlar", "url": "tanlovlar"},
+    ],
+
+    "navigation_expanded": False,
+
+    "hide_apps": ['auth'],
+
+    "show_ui_builder": True,
+
+    "changeform_format": "collapsible",
+
+    # "usermenu_links": [
+    # {"name": "Profile", "url": "profile"},
+    # {"name": "Logout", "url": "logout"},
+    # {"name": "Login", "url": "login"},
+    # {"name": "Signup", "url": "signup"},
+
+    #     ]
+
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": False,
+    "accent": "accent-primary",
+    "navbar": "navbar-white navbar-light",
+    "no_navbar_border": False,
+    "navbar_fixed": True,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": False,
+    "sidebar": "sidebar-dark-primary",
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": False,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": True,
+    "theme": "default",
+    "dark_mode_theme": None,
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success"
+    },
+    "actions_sticky_top": False
+}
