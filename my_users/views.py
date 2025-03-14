@@ -1,48 +1,55 @@
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import RegisterSerializer, LoginSerializer
-from .models import CustomUser, GlobalUserInfo
+from .models import CustomUser
 
+# Register View: Foydalanuvchi ro'yxatdan o'tadi
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
-    permission_classes = (AllowAny,)
     serializer_class = RegisterSerializer
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        # JWT tokenlarni yaratish
         refresh = RefreshToken.for_user(user)
         return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-            'phone': user.phone,
-            'name': user.name,
-            'surname': user.last_name,
-            'detail': 'Registration successful. Please wait for admin approval.'
-        })
+            'message': 'Foydalanuvchi muvaffaqiyatli ro\'yxatdan o\'tdi. Iltimos, admin tasdiqlashini kuting.',
+            'access_token': str(refresh.access_token),
+            'refresh_token': str(refresh)
+        }, status=status.HTTP_201_CREATED)
+
+# Login View: Foydalanuvchi tizimga kiradi
 
 
 class LoginView(generics.GenericAPIView):
-    permission_classes = (AllowAny,)
     serializer_class = LoginSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        if not user.is_active:
-            global_info = GlobalUserInfo.objects.first()
+
+        phone = serializer.validated_data['phone']
+        name = serializer.validated_data['name']
+
+        try:
+            user = CustomUser.objects.get(phone=phone)
+            # Foydalanuvchi nomini tekshirish
+            if user.name != name:
+                return Response({'message': 'Foydalanuvchi nomi yoki telefon raqami noto\'g\'ri!'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            # Admin tomonidan tasdiqlanmagan bo'lsa, foydalanuvchi tizimga kira olmaydi
+            if not user.is_active:
+                return Response({'message': 'Admin ruxsat berishini kuting!'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            # JWT tokenlarni yaratish
+            refresh = RefreshToken.for_user(user)
             return Response({
-                'card_number': global_info.card_number,
-                'telegram_username': global_info.telegram_username,
-                'message': global_info.message,
-                'detail': 'Please make a payment and contact the admin to activate your account.'
-            })
-        refresh = RefreshToken.for_user(user)
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        })
+                'access_token': str(refresh.access_token),
+                'refresh_token': str(refresh)
+            }, status=status.HTTP_200_OK)
+        except CustomUser.DoesNotExist:
+            return Response({'message': 'Ro\'yxatdan o\'tmagan foydalanuvchi. Iltimos, ro\'yxatdan o\'ting.'},
+                            status=status.HTTP_400_BAD_REQUEST)

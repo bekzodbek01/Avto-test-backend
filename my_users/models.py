@@ -61,5 +61,4 @@ class GlobalUserInfo(models.Model):
     telegram_username = models.CharField(max_length=50, blank=True, null=True)  # Foydalanuvchining Telegram username
     message = models.TextField(blank=True, null=True)  # Admin tomonidan kiritilgan matn
 
-    def __str__(self):
-        return 'Global User Info'
+
