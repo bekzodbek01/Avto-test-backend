@@ -31,6 +31,7 @@ class RegisterView(generics.CreateAPIView):
 
 class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
+    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -42,17 +43,12 @@ class LoginView(generics.GenericAPIView):
         try:
             user = CustomUser.objects.get(phone=phone)
 
-            # Agar foydalanuvchi hali admin tomonidan tasdiqlanmagan bo'lsa
-            if not user.is_staff:  # Admin tasdiqlaganini tekshirish
-                return Response({'message': 'Admin ruxsat berishini kuting!'},
-                                status=status.HTTP_400_BAD_REQUEST)
+            if not user.is_active:
+                return Response({'message': 'Admin ruxsat berishini kuting!'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Foydalanuvchi nomini tekshirish
             if user.name != name:
-                return Response({'message': 'Foydalanuvchi nomi yoki telefon raqami noto\'g\'ri!'},
-                                status=status.HTTP_400_BAD_REQUEST)
+                return Response({'message': 'Foydalanuvchi nomi yoki telefon raqami noto\'g\'ri!'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # JWT tokenlarini yaratish
             refresh = RefreshToken.for_user(user)
             return Response({
                 'access_token': str(refresh.access_token),
@@ -60,5 +56,4 @@ class LoginView(generics.GenericAPIView):
             }, status=status.HTTP_200_OK)
 
         except CustomUser.DoesNotExist:
-            return Response({'message': 'Ro\'yxatdan o\'tmagan foydalanuvchi. Iltimos, ro\'yxatdan o\'ting.'},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'Ro‘yxatdan o‘tmagan foydalanuvchi. Iltimos, ro‘yxatdan o‘ting.'}, status=status.HTTP_400_BAD_REQUEST)

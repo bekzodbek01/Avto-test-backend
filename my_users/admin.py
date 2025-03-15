@@ -13,7 +13,7 @@ class CustomUserAdmin(UserAdmin):
     fieldsets = (
         (None, {'fields': ('phone',)}),
         ('Shaxsiy ma’lumotlar', {'fields': ('name', 'last_name')}),
-        ('Ruxsatlar', {'fields': ('is_staff',  'is_superuser')}),
+        ('Ruxsatlar', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
         ('Muhim sanalar', {'fields': ('last_login',)}),
     )
 
