@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Group, Permission
 from django.db import models
 from django.contrib.auth.base_user import BaseUserManager
+from django.core.validators import RegexValidator
 
 
 class CustomUserManager(BaseUserManager):
@@ -27,7 +28,8 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
-    phone = models.CharField(max_length=15, unique=True)
+    phone = models.CharField(max_length=16, validators=[
+        RegexValidator(regex='^\+998[0-9]{9}$', message='Telefon raqami +998 formatida bo\'lishi kerak va 9 raqamdan iborat bo\'lishi lozim.')])
     is_active = models.BooleanField(default=False)  # Yangi foydalanuvchi dastlab faolsiz holatda
     is_staff = models.BooleanField(default=False)
 
@@ -60,5 +62,3 @@ class GlobalUserInfo(models.Model):
     card_number = models.CharField(max_length=19, blank=True, null=True)  # Foydalanuvchining karta raqami
     telegram_username = models.CharField(max_length=50, blank=True, null=True)  # Foydalanuvchining Telegram username
     message = models.TextField(blank=True, null=True)  # Admin tomonidan kiritilgan matn
-
-
