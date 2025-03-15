@@ -10,22 +10,17 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
 
     def create(self, request, *args, **kwargs):
-        # Telefon raqami mavjudligini tekshirish
         phone = request.data.get('phone')
         if CustomUser.objects.filter(phone=phone).exists():
-            return Response({
-                'message': 'Telefon raqami allaqachon ro\'yxatdan o\'tgan!',
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': "Telefon raqami allaqachon ro'yxatdan o'tgan!"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Ro'yxatdan o'tish jarayoni
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        user = serializer.save(is_active=True)
 
-        # JWT tokenlarni yaratish
         refresh = RefreshToken.for_user(user)
         return Response({
-            'message': 'Foydalanuvchi muvaffaqiyatli ro\'yxatdan o\'tdi. Iltimos, admin tasdiqlashini kuting.',
+            'message': "Foydalanuvchi muvaffaqiyatli ro'yxatdan o'tdi.",
             'access_token': str(refresh.access_token),
             'refresh_token': str(refresh)
         }, status=status.HTTP_201_CREATED)

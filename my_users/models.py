@@ -28,8 +28,7 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
-    phone = models.CharField(max_length=16, validators=[
-        RegexValidator(regex='^\+998[0-9]{9}$', message='Telefon raqami +998 formatida bo\'lishi kerak va 9 raqamdan iborat bo\'lishi lozim.')])
+    phone = models.CharField(max_length=16, )
     is_active = models.BooleanField(default=False)  # Yangi foydalanuvchi dastlab faolsiz holatda
     is_staff = models.BooleanField(default=False)
 
