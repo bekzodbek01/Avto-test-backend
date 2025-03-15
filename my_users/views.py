@@ -4,7 +4,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import RegisterSerializer, LoginSerializer
 from .models import CustomUser
 
-
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = RegisterSerializer
@@ -16,8 +15,9 @@ class RegisterView(generics.CreateAPIView):
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save(is_active=True)
+        user = serializer.save(is_active=True)  # Foydalanuvchi darhol faollashtiriladi
 
+        # Foydalanuvchi uchun JWT token yaratish
         refresh = RefreshToken.for_user(user)
         return Response({
             'message': "Foydalanuvchi muvaffaqiyatli ro'yxatdan o'tdi.",
@@ -39,14 +39,14 @@ class LoginView(generics.GenericAPIView):
         try:
             user = CustomUser.objects.get(phone=phone)
 
+            # Agar foydalanuvchi hali admin tomonidan tasdiqlanmagan bo'lsa
+            if not user.is_staff:  # Admin tasdiqlaganini tekshirish
+                return Response({'message': 'Admin ruxsat berishini kuting!'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
             # Foydalanuvchi nomini tekshirish
             if user.name != name:
                 return Response({'message': 'Foydalanuvchi nomi yoki telefon raqami noto\'g\'ri!'},
-                                status=status.HTTP_400_BAD_REQUEST)
-
-            # Admin tomonidan tasdiqlanmagan bo'lsa, foydalanuvchi tizimga kira olmaydi
-            if not user.is_active:
-                return Response({'message': 'Admin ruxsat berishini kuting!'},
                                 status=status.HTTP_400_BAD_REQUEST)
 
             # JWT tokenlarini yaratish
