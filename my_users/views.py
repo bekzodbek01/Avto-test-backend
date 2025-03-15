@@ -2,11 +2,14 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import RegisterSerializer, LoginSerializer
+from rest_framework.permissions import AllowAny
 from .models import CustomUser
+
 
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = RegisterSerializer
+    permission_classes = [AllowAny]  # <-- Shu qatorni qo'shing
 
     def create(self, request, *args, **kwargs):
         phone = request.data.get('phone')
