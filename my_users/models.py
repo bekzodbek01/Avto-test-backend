@@ -58,6 +58,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 
 class GlobalUserInfo(models.Model):
-    card_number = models.CharField(max_length=19, blank=True, null=True)  # Foydalanuvchining karta raqami
-    telegram_username = models.CharField(max_length=50, blank=True, null=True)  # Foydalanuvchining Telegram username
-    message = models.TextField(blank=True, null=True)  # Admin tomonidan kiritilgan matn
+    card_number = models.CharField(max_length=19, blank=True, null=True)
+    telegram_username = models.CharField(max_length=50, blank=True, null=True)
+    message = models.TextField(blank=True, null=True)

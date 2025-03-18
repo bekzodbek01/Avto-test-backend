@@ -1,4 +1,3 @@
-
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import CustomUser, GlobalUserInfo
@@ -10,11 +9,19 @@ class CustomUserAdmin(UserAdmin):
     list_filter = ('is_active',)
     search_fields = ('phone', 'name', 'last_name')
     ordering = ('phone',)
+
     fieldsets = (
-        (None, {'fields': ('phone',)}),
+        (None, {'fields': ('phone', 'password')}),
         ('Shaxsiy ma’lumotlar', {'fields': ('name', 'last_name')}),
-        ('Ruxsatlar', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
+        ('Ruxsatlar', {'fields': ('is_active', 'is_staff', 'is_superuser',)}),
         ('Muhim sanalar', {'fields': ('last_login',)}),
+    )
+
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('phone', 'name', 'last_name', 'password1', 'password2'),
+        }),
     )
 
 

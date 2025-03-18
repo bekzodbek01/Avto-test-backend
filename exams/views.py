@@ -1,157 +1,126 @@
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import APIView
+from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework import status
-from .models import Marathon, Option, OptionAnswer, Category
-from .serializers import OptionAnswerSerializer, MarathonSerializer, CategorySerializer
-from django.utils import timezone
-from rest_framework.generics import ListAPIView, RetrieveAPIView
-from .serializers import OptionAnswerSerializer
+from rest_framework.views import APIView
+
+from .models import Category, Marathon, Option, UserAnswer
+from .serializers import UserAnswerSerializer, CategorySerializer, MarathonSerializer
+from rest_framework.permissions import IsAuthenticated
 
 
-class CategoryListAPIView(ListAPIView):
+class CategoryDetailView(generics.RetrieveAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
-class CategoryDetailAPIView(RetrieveAPIView):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-    lookup_field = 'id'
+class MarathonListView(generics.ListAPIView):
+    queryset = Marathon.objects.all()
+    serializer_class = MarathonSerializer
 
 
-class OptionAnswerCreateAPIView(APIView):
-    def post(self, request, *args, **kwargs):
-        serializer = OptionAnswerSerializer(data=request.data)
-        if serializer.is_valid():
-            option = serializer.validated_data['option']
-            is_correct = option.is_correct  # Variant to‘g‘riligini olish
-            serializer.validated_data['is_correct'] = is_correct
-            option_answer = serializer.save()
+class UserResultsView(APIView):
+    def post(self, request):
+        user = request.user
+        total_marathons = Marathon.objects.count()  # Umumiy marafonlar soni
+        selected_option_ids = request.data.get("selected_options", [])  # Tanlangan variantlar
 
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # ✅ **Foydalanuvchi tanlagan variantlar sonini olish**
+        total_selected_options = len(selected_option_ids)
+
+        # ✅ **Foydalanuvchi tanlagan variantlarni olish**
+        # Faqat mavjud variantlar olish
+        selected_options = Option.objects.filter(id__in=selected_option_ids)
+
+        # Tanlangan variantlar sonini hisoblash
+        total_selected_options = selected_options.count()
+
+        # ✅ **To‘g‘ri variantlar soni**
+        correct_answers = selected_options.filter(is_correct=True).count()
+
+        # ✅ **Noto‘g‘ri variantlar soni**:
+        incorrect_answers = total_selected_options - correct_answers
+
+        # ✅ **Tashlab ketilgan savollar soni**
+        skipped_questions = max(total_marathons - total_selected_options, 0)
+
+        # ✅ **To‘g‘ri javoblar foizi (0-100%)**
+        correct_percentage = (correct_answers / total_marathons) * 100 if total_marathons else 0
+
+        return Response({
+            "user_id": user.id,
+            "user_name": user.get_full_name() if user.get_full_name() else user.username,
+            "total_marathons": total_marathons,  # Jami marafonlar soni
+            "answered_questions": total_selected_options,  # Tanlangan variantlar soni
+            "skipped_questions": skipped_questions,  # Tashlab ketilgan savollar soni
+            "correct_answers": correct_answers,  # To‘g‘ri variantlar soni
+            "incorrect_answers": incorrect_answers,  # Noto‘g‘ri variantlar soni
+            "correct_percentage": round(min(correct_percentage, 100), 2)  # Foiz (100% dan oshmasligi)
+        }, status=status.HTTP_200_OK)
 
 
-class CategoryResultAPIView(APIView):
-    def get(self, request, category_id, format=None):
-        user_id = request.query_params.get('user')
+class CategoryResultsAPIView(generics.CreateAPIView):
+    """Kategoriya bo‘yicha natijalarni hisoblash"""
+    permission_classes = [IsAuthenticated]  # Foydalanuvchini tekshirish
 
-        if not user_id or not user_id.isdigit():
-            return Response({"detail": "Valid User parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+    def create(self, request, *args, **kwargs):
+        user = request.user  # Foydalanuvchini olish
+        category_id = request.data.get("category_id")  # Kategoriya ID
+        selected_option_ids = request.data.get("selected_options", [])  # Tanlangan variantlar ID-lari
 
-        user_id = int(user_id)
+        if not category_id:
+            return Response({"error": "category_id talab qilinadi"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Kategoriya mavjudligini tekshirish
         try:
             category = Category.objects.get(id=category_id)
         except Category.DoesNotExist:
-            return Response({"detail": "Category not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Kategoriya topilmadi"}, status=status.HTTP_404_NOT_FOUND)
 
+        # Kategoriya ichidagi marafonlarni olish
         marathons = Marathon.objects.filter(category=category)
-        total_questions = Option.objects.filter(marathon__in=marathons).count()
-        answers = OptionAnswer.objects.filter(option__marathon__in=marathons, user_id=user_id)
-        correct_answers = answers.filter(is_correct=True).count()
-        incorrect_answers = answers.filter(is_correct=False).count()
-        unanswered = total_questions - (correct_answers + incorrect_answers)
+        total_marathons = marathons.count()
 
-        correct_percentage = (correct_answers / total_questions * 100) if total_questions > 0 else 0
+        # Kategoriya ichidagi barcha savollar sonini hisoblash
+        total_questions = Option.objects.filter(marathon__in=marathons).values("marathon").distinct().count()
+
+        # Foydalanuvchi tanlagan variantlarni olish
+        if selected_option_ids:
+            selected_options = Option.objects.filter(id__in=selected_option_ids)
+        else:
+            selected_options = Option.objects.none()  # Hech qanday variant tanlanmagan bo'lsa
+
+        # Foydalanuvchi nechta savolga javob berganligini hisoblash
+        answered_questions = selected_options.values("marathon").distinct().count()
+
+        # To‘g‘ri va noto‘g‘ri javoblarni hisoblash
+        correct_answers = selected_options.filter(is_correct=True).count()
+        incorrect_answers = answered_questions - correct_answers
+
+        # Tashlab ketilgan savollarni hisoblash
+        skipped_questions = total_questions - answered_questions
+
+        # To‘g‘ri javoblar foizini hisoblash
+        correct_percentage = (correct_answers / total_questions) * 100 if total_questions > 0 else 0
+
+        # **Foydalanuvchi javoblarini saqlash**
+        # Foydalanuvchining mavjud javobini olish yoki yangi yaratish
+        user_answer = UserAnswer.objects.filter(user=user).first()
+        if not user_answer:
+            user_answer = UserAnswer.objects.create(user=user)
+
+        user_answer.selected_options.set(selected_options)
+        user_answer.is_correct = correct_answers > incorrect_answers
+        user_answer.save()
 
         return Response({
-            "category": {
-                "id": category.id,
-                "title": category.title
-            },
+            "user_id": user.id,
+            "user_name": user.get_full_name() if user.get_full_name() else user.username,
+            "category_id": category.id,
+            "category_name": category.title,
+            "total_marathons": total_marathons,
             "total_questions": total_questions,
-            "correct_answers": correct_answers,
-            "incorrect_answers": incorrect_answers,
-            "unanswered": unanswered,
-            "correct_percentage": round(correct_percentage, 2)
-        })
-
-
-class CategoryAnswerAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        user = request.user
-        option_id = request.data.get("option")
-
-        if not option_id:
-            return Response({"detail": "Option is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            option = Option.objects.get(id=option_id)
-        except Option.DoesNotExist:
-            return Response({"detail": "Option not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        answer = OptionAnswer.objects.create(user=user, option=option, is_correct=option.is_correct)
-
-        return Response({
-            "message": "Answer saved successfully",
-            "is_correct": answer.is_correct,
-            "text": answer.text
-        }, status=status.HTTP_201_CREATED)
-
-
-class MarathonAnswerAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        user = request.user  # Autentifikatsiyadan o‘tgan foydalanuvchi
-        option_id = request.data.get("option")
-
-        if not option_id:
-            return Response({"detail": "Option is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            option = Option.objects.get(id=option_id)
-        except Option.DoesNotExist:
-            return Response({"detail": "Option not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        answer = OptionAnswer.objects.create(user=user, option=option, is_correct=option.is_correct)
-
-        return Response({
-            "message": "Answer saved successfully",
-            "is_correct": answer.is_correct,
-            "text": answer.text
-        }, status=status.HTTP_201_CREATED)
-
-
-class MarathonResultAPIView(APIView):
-    def get(self, request, marathon_id, format=None):
-        user_id = request.query_params.get("user")
-
-        if not user_id or not user_id.isdigit():
-            return Response({"detail": "Valid User parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-        user_id = int(user_id)
-        try:
-            marathon = Marathon.objects.get(id=marathon_id)
-        except Marathon.DoesNotExist:
-            return Response({"detail": "Marathon not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        total_questions = Option.objects.filter(marathon=marathon).count()
-        answers = OptionAnswer.objects.filter(option__marathon=marathon, user_id=user_id)
-        correct_answers = answers.filter(is_correct=True).count()
-        incorrect_answers = answers.filter(is_correct=False).count()
-        unanswered = total_questions - (correct_answers + incorrect_answers)
-
-        correct_percentage = (correct_answers / total_questions * 100) if total_questions > 0 else 0
-
-        return Response({
-            "total_questions": total_questions,
-            "correct_answers": correct_answers,
-            "incorrect_answers": incorrect_answers,
-            "unanswered": unanswered,
-            "correct_percentage": round(correct_percentage, 2)
-        })
-
-
-class MarathonListAPIView(ListAPIView):
-    queryset = Marathon.objects.all()
-    serializer_class = MarathonSerializer
-
-
-class MarathonDetailAPIView(RetrieveAPIView):
-    queryset = Marathon.objects.all()
-    serializer_class = MarathonSerializer
-    lookup_field = 'id'
+            "total_answered_questions": answered_questions,
+            "total_skipped_questions": skipped_questions,
+            "total_correct_answers": correct_answers,
+            "total_incorrect_answers": incorrect_answers,
+            "category_correct_percentage": round(correct_percentage, 2)
+        }, status=status.HTTP_200_OK)

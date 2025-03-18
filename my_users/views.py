@@ -1,15 +1,15 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import RegisterSerializer, LoginSerializer
+from .serializers import RegisterSerializer, LoginSerializer, GlobalUserInfSerializers
 from rest_framework.permissions import AllowAny
-from .models import CustomUser
+from .models import CustomUser, GlobalUserInfo
 
 
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = RegisterSerializer
-    permission_classes = [AllowAny]  # <-- Shu qatorni qo'shing
+    permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
         phone = request.data.get('phone')
@@ -57,3 +57,8 @@ class LoginView(generics.GenericAPIView):
 
         except CustomUser.DoesNotExist:
             return Response({'message': 'Ro‘yxatdan o‘tmagan foydalanuvchi. Iltimos, ro‘yxatdan o‘ting.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GlobalUserInfoListView(generics.ListAPIView):
+    queryset = GlobalUserInfo.objects.all()
+    serializer_class = GlobalUserInfSerializers
