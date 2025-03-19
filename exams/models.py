@@ -6,7 +6,11 @@ class Category(models.Model):
     title = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.title
+        return self.title or 'No title'
+
+    class Meta:
+        verbose_name = 'Category'
+        verbose_name_plural = 'Category'
 
 
 class Marathon(models.Model):
@@ -18,6 +22,10 @@ class Marathon(models.Model):
     def __str__(self):
         return self.title or 'No title'
 
+    class Meta:
+        verbose_name = 'Marathon'
+        verbose_name_plural = 'Marathon'
+
 
 class Option(models.Model):
     marathon = models.ForeignKey(Marathon, related_name="options", on_delete=models.CASCADE)
@@ -26,7 +34,11 @@ class Option(models.Model):
     is_correct = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.text
+        return self.text or 'No title'
+
+    class Meta:
+        verbose_name = 'Option'
+        verbose_name_plural = 'Option'
 
 
 class UserAnswer(models.Model):

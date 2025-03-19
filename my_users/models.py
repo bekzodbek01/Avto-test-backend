@@ -54,10 +54,21 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     )
 
     def __str__(self):
-        return self.phone
+        return self.phone or 'No phone'
+
+    class Meta:
+        verbose_name = 'CustomUser'
+        verbose_name_plural = 'CustomUsers'
 
 
 class GlobalUserInfo(models.Model):
-    card_number = models.CharField(max_length=19, blank=True, null=True)
+    card_number = models.CharField(max_length=30, blank=True, null=True)
     telegram_username = models.CharField(max_length=50, blank=True, null=True)
     message = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.card_number or 'No card_number'
+
+    class Meta:
+        verbose_name = 'GlobalUserInfo'
+        verbose_name_plural = 'GlobalUserInfo'
