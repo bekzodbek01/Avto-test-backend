@@ -20,5 +20,4 @@ class CategoryAdmin(admin.ModelAdmin):
     search_fields = ['title']
 
 
-admin.site.register(UserAnswer)
 admin.site.register(Category)
