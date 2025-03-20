@@ -19,6 +19,8 @@ class MarathonListView(generics.ListAPIView):
 
 
 class UserResultsView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         user = request.user
         total_marathons = Marathon.objects.count()  # Umumiy marafonlar soni
@@ -181,3 +183,25 @@ class CategoryResultsAPIView(generics.CreateAPIView):
             "total_incorrect_answers": incorrect_answers,
             "category_correct_percentage": round(correct_percentage, 2)
         }, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
