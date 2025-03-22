@@ -14,6 +14,8 @@ from rest_framework.permissions import IsAuthenticated
 class MarathonListView(generics.ListAPIView):
     queryset = Marathon.objects.all()
     serializer_class = MarathonSerializer
+    permission_classes = [IsAuthenticated]  # Ruxsat qo‘shildi
+
 
 
 class UserResultsView(APIView):
