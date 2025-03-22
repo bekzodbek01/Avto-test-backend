@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     # install app
     'rest_framework',
     'drf_yasg',
+    'corsheaders',
 
 
 
