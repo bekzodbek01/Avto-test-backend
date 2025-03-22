@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import os
 from datetime import timedelta
 from pathlib import Path
+from corsheaders.defaults import default_headers
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -53,6 +54,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -253,3 +255,22 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 209715200  # 200 MB (baytlarda)
 DATA_UPLOAD_MAX_MEMORY_SIZE = 209715200  # 200 MB
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://backend.bekzodbek-dev.uz',
+    'https://backend.bekzodbek-dev.uz',
+]
+
+CSRF_COOKIE_DOMAIN = 'backend.bekzodbek-dev.uz'
+
+# Agar SSL ishlatmasangiz, bu sozlamalarni False ga o'zgartiring
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
+
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'language-code',
+]
